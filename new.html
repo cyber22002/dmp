@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D.M.P. - Double Man Power</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts - Inter for a clean, modern look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f8f8; /* Light background for the page */
+            margin: 0; /* Ensure no default body margin */
+            /* Add padding to the body to ensure content starts below the fixed header */
+            padding-top: 64px; /* Adjust this value based on header's actual height */
+        }
+
+        /* Fixed Header Styles - Now with a higher z-index */
+        .fixed-header {
+            height: 64px; /* Fixed height for the header */
+            box-sizing: border-box; /* Include padding in height calculation */
+            z-index: 30; /* Higher z-index to keep header on top of scrolling content */
+            transition: opacity 0.1s ease-out; /* Smooth transition for opacity change */
+        }
+
+        /* Hero Section for Parallax Effect - Now with a lower z-index than the header */
+        .hero {
+            position: relative;
+            z-index: 20; /* Lower z-index than header, so it scrolls underneath */
+        }
+
+        /* Modal Overlay Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent black background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100; /* High z-index to appear on top of everything */
+            opacity: 0; /* Start hidden */
+            visibility: hidden; /* Start hidden */
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Common Modal Content Styles */
+        .modal-content {
+            background-color: #fff;
+            padding: 2.5rem; /* Equivalent to p-10 */
+            border-radius: 1rem; /* Equivalent to rounded-xl */
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3); /* Equivalent to shadow-2xl */
+            width: 90%;
+            max-width: 28rem; /* Equivalent to max-w-md */
+            position: relative;
+            transform: translateX(0); /* Default position for sliding */
+            transition: transform 0.4s ease-in-out; /* Smooth transition for sliding */
+        }
+
+        /* Sliding In/Out Effects for Modals */
+        .modal-slide-right {
+            transform: translateX(100%); /* Start off-screen to the right */
+        }
+
+        .modal-slide-left {
+            transform: translateX(-100%); /* Start off-screen to the left */
+        }
+
+        /* Responsive adjustments for modal */
+        @media (max-width: 640px) { /* Adjust for small screens */
+            .modal-content {
+                padding: 1.5rem; /* Smaller padding on small screens */
+            }
+        }
+
+        /* Initial animation for modal appearance */
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .modal-overlay.active .modal-content {
+            animation: fadeInScale 0.3s ease-out forwards;
+        }
+
+        /* Loader animation */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Styles for the Hero Image Slider */
+        #hero-image-slider {
+            position: relative;
+            height: 350px; /* Fixed height for the slider container */
+            overflow: hidden;
+            border-radius: 1rem; /* Matches rounded-xl */
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3); /* Matches shadow-2xl */
+        }
+
+        #hero-image-slider img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ensures image covers the area without distortion */
+            opacity: 0; /* Hidden by default */
+            transition: opacity 1s ease-in-out; /* Smooth fade transition */
+        }
+
+        #hero-image-slider img.active {
+            opacity: 1; /* Active image is visible */
+        }
+
+        /* Slider Navigation Dots */
+        .slider-dot {
+            transition: background-color 0.3s ease; /* Smooth transition for dot color */
+            opacity: 0.5; /* Default opacity for inactive dots */
+        }
+
+        .slider-dot.active {
+            background-color: #3B82F6; /* Tailwind blue-600 for active dot */
+            opacity: 1; /* Fully opaque for active dot */
+        }
+
+        /* Slider Navigation Arrows */
+        .slider-arrow {
+            z-index: 10; /* Ensures arrows are above images */
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Section - Fixed at the top with a higher z-index -->
+    <header class="fixed-header fixed top-0 left-0 right-0 w-full bg-white shadow-md flex items-center">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <!-- Logo/Brand Name with Slogan - Now functions as the Home button -->
+            <a href="#" class="flex flex-col items-start leading-none group p-2 rounded-md" title="Go to Home">
+                <span class="text-2xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors duration-300">D.M.P.</span>
+                <span class="text-sm text-gray-500 font-medium -mt-1 ml-1 group-hover:text-blue-500 transition-colors duration-300">Double Man Power</span>
+            </a>
+            
+            <!-- Navigation Menu -->
+            <nav class="hidden md:flex space-x-6">
+                <a href="#" class="text-gray-600 hover:text-blue-600 transition-colors duration-300 px-3 py-2 rounded-md">Shop</a>
+                <a href="#" class="text-gray-600 hover:text-blue-600 transition-colors duration-300 px-3 py-2 rounded-md">Collections</a>
+                <a href="about-contact.html" class="text-gray-600 hover:text-blue-600 transition-colors duration-300 px-3 py-2 rounded-md">About Us</a>
+                <a href="about-contact.html#contact" class="text-gray-600 hover:text-blue-600 transition-colors duration-300 px-3 py-2 rounded-md">Contact Us</a>
+            </nav>
+
+            <!-- Action Buttons (Login/Sign Up) -->
+            <div class="flex items-center space-x-4">
+                <a href="#" id="login-button-header" class="text-gray-600 hover:text-blue-600 transition-colors duration-300 hidden sm:block">Login</a>
+                <a href="#" id="signup-button-header" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-300 shadow-md">Sign Up</a>
+            </div>
+
+            <!-- Mobile Menu Button (Hamburger) -->
+            <button class="md:hidden text-gray-700 focus:outline-none">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Hero Section - Will move faster with parallax -->
+    <section class="hero bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-20 md:py-32">
+        <div class="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between">
+            <!-- Hero Text Content -->
+            <div class="md:w-1/2 text-center md:text-left mb-10 md:mb-0">
+                <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-6">
+                    Your Central Business Hub: Connect, Collaborate, Grow
+                </h1>
+                <p class="text-lg md:text-xl mb-8 opacity-90">
+                    D.M.P. focuses on bringing together diverse businesses into one powerful platform, fostering collaboration and maximizing collective potential. Your next partnership awaits.
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center md:justify-start space-y-4 sm:space-y-0 sm:space-x-4">
+                    <!-- Buttons for business options -->
+                    <a href="#" class="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors duration-300 shadow-lg">
+                        Add Your Business
+                    </a>
+                    <a href="#" class="border-2 border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:bg-opacity-20 transition-colors duration-300 shadow-lg">
+                        View Available Businesses
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Hero Image/Graphic - Now a Fading Image Slider -->
+            <div class="md:w-1/2 flex justify-center">
+                <div id="hero-image-slider" class="relative w-full rounded-xl overflow-hidden shadow-2xl">
+                    <!-- Slides -->
+                    <img src="Screenshot 2025-06-09 132227.png" alt="D.M.P. Business Network Graphic" class="absolute inset-0 w-full h-full object-cover active">
+                    <img src="https://placehold.co/500x350/C8A2C8/FFF?text=Team+Collaboration" alt="Team Collaboration" class="absolute inset-0 w-full h-full object-cover">
+                    <img src="https://placehold.co/500x350/ADD8E6/000?text=Global+Reach" alt="Global Reach" class="absolute inset-0 w-full h-full object-cover">
+                    
+                    <!-- Navigation Dots -->
+                    <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                        <span class="slider-dot w-3 h-3 bg-white rounded-full cursor-pointer active"></span>
+                        <span class="slider-dot w-3 h-3 bg-white rounded-full cursor-pointer"></span>
+                        <span class="slider-dot w-3 h-3 bg-white rounded-full cursor-pointer"></span>
+                    </div>
+
+                    <!-- Navigation Arrows -->
+                    <button class="slider-arrow slider-prev absolute left-4 top-1/2 -translate-y-1/2 bg-white bg-opacity-30 hover:bg-opacity-50 text-white p-2 rounded-full z-10 transition-colors duration-200">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    </button>
+                    <button class="slider-arrow slider-next absolute right-4 top-1/2 -translate-y-1/2 bg-white bg-opacity-30 hover:bg-opacity-50 text-white p-2 rounded-full z-10 transition-colors duration-200">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features/Value Proposition Section -->
+    <section class="py-16 md:py-24 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 text-center mb-12">Why Choose Our Platform?</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Feature 1: Available Businesses -->
+                <div class="bg-gray-50 p-8 rounded-xl shadow-lg text-center hover:shadow-xl transition-shadow duration-300 flex flex-col items-center">
+                    <img src="https://placehold.co/60x60/87CEEB/FFF?text=🏪" alt="Storefront Icon" class="mx-auto mb-6 rounded-full p-3 bg-blue-100">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-3">Available Businesses</h3>
+                    <p class="text-gray-600 mb-6">Explore a comprehensive directory of businesses available on our platform, connecting you to a wide network of opportunities.</p>
+                    <a href="#" class="mt-auto bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-300 shadow-md">
+                        View All Businesses
+                    </a>
+                </div>
+                <!-- Feature 2: Support Local Business -->
+                <div class="bg-gray-50 p-8 rounded-xl shadow-lg text-center hover:shadow-xl transition-shadow duration-300 flex flex-col items-center">
+                    <img src="https://placehold.co/60x60/87CEEB/FFF?text=🏘️" alt="Neighborhood Icon" class="mx-auto mb-6 rounded-full p-3 bg-blue-100">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-3">Support Local Business</h3>
+                    <p class="text-gray-600 mb-6">Discover and champion the incredible businesses right in your neighborhood. Strengthening our local economy starts with you!</p>
+                    <a href="#" class="mt-auto border-2 border-blue-600 text-blue-600 px-6 py-2 rounded-lg font-semibold hover:bg-blue-600 hover:text-white transition-colors duration-300">
+                        Businesses in My Area
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Our Vision & Community Section (formerly Our Philosophy) -->
+    <section class="py-16 md:py-24 bg-gray-50">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 mb-8">Our Vision & Community</h2>
+            <blockquote class="text-xl md:text-2xl italic text-gray-700 max-w-3xl mx-auto leading-relaxed mb-6">
+                <p>"The true measure of a journey isn't in the miles traveled, but in the echoes left within the soul, shaping the silence into a symphony of understanding."</p>
+            </blockquote>
+            <p class="text-lg text-gray-600 mt-6 max-w-4xl mx-auto mb-4">
+                At D.M.P., we believe that businesses are more than just transactions; they are the very fabric of our communities, fueling innovation, providing livelihoods, and creating spaces where ideas flourish.
+            </p>
+            <p class="text-lg text-gray-600 max-w-4xl mx-auto mb-4">
+                Customers are the heart of every business. Your choices, your needs, and your trust empower local economies and drive progress. We strive to create a platform where your connections make a real difference.
+            </p>
+            <p class="text-lg text-gray-600 max-w-4xl mx-auto font-semibold">
+                This philosophy is deeply rooted in the Nguni proverb: <br class="md:hidden">
+                <span class="text-blue-600 text-2xl md:text-3xl font-extrabold block mt-2 mb-2">"Umuntu ngumuntu ngabantu."</span>
+                <span class="text-lg text-gray-600">(A person is a person through other people.)</span>
+            </p>
+            <p class="text-lg text-gray-600 mt-4 max-w-4xl mx-auto">
+                It's a powerful reminder that our individual success and well-being are intrinsically linked to the collective. In business, as in life, we need each other. This platform is built to foster that interconnectedness, creating a vibrant ecosystem where everyone thrives together.
+            </p>
+        </div>
+    </section>
+
+    <!-- D.M.P. Offerings Section (Replaces Featured Business Partners) -->
+    <section class="py-16 md:py-24 bg-gray-100">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 text-center mb-12">What D.M.P. Offers You</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Offering 1: Business Website Creation -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden group hover:shadow-xl transition-shadow duration-300">
+                    <img src="https://placehold.co/400x300/60A5FA/FFF?text=Business+Website" alt="Business Website Creation" class="w-full h-48 object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-500 ease-in-out">
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Professional Business Websites</h3>
+                        <p class="text-gray-600 mb-4">We design and develop high-quality business websites, placing your brand under our radar for enhanced visibility and more viewers.</p>
+                        <a href="#" class="text-blue-600 font-medium hover:text-blue-800 transition-colors duration-300">Learn More &rarr;</a>
+                    </div>
+                </div>
+                <!-- Offering 2: Individual Website Creation -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden group hover:shadow-xl transition-shadow duration-300">
+                    <img src="https://placehold.co/400x300/34D399/FFF?text=Individual+Website" alt="Individual Website Creation" class="w-full h-48 object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-500 ease-in-out">
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Personalized Individual Websites</h3>
+                        <p class="text-gray-600 mb-4">Create your unique online presence with a custom individual website, gaining access to our network for broader exposure.</p>
+                        <a href="#" class="text-blue-600 font-medium hover:text-blue-800 transition-colors duration-300">Learn More &rarr;</a>
+                    </div>
+                </div>
+                <!-- Offering 3: Strategic Marketing & Exposure -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden group hover:shadow-xl transition-shadow duration-300">
+                    <img src="https://placehold.co/400x300/FACC15/000?text=Marketing+Support" alt="Strategic Marketing Support" class="w-full h-48 object-cover rounded-t-xl group-hover:scale-105 transition-transform duration-500 ease-in-out">
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">Strategic Marketing & Exposure</h3>
+                        <p class="text-gray-600 mb-4">Beyond creation, we offer strategic marketing support to ensure your business or individual website receives maximum exposure and reaches your target audience.</p>
+                        <a href="#" class="text-blue-600 font-medium hover:text-blue-800 transition-colors duration-300">Learn More &rarr;</a>
+                    </div>
+                </div>
+            </div>
+            <div class="text-center mt-12">
+                <a href="#" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors duration-300 shadow-md">
+                    Explore All Services
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Business Description Generator Section (New LLM Feature) -->
+    <section class="py-16 md:py-24 bg-white">
+        <div class="container mx-auto px-4 max-w-3xl">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-800 text-center mb-8">Generate Your Business Description ✨</h2>
+            <p class="text-lg text-gray-600 text-center mb-8">Let our AI help you craft a compelling description for your business. Simply tell us a few keywords or a brief overview, and we'll do the rest!</p>
+            
+            <div class="bg-gray-50 p-8 rounded-xl shadow-lg">
+                <div class="mb-6">
+                    <label for="business-input" class="block text-gray-700 text-lg font-medium mb-3">Tell us about your business (keywords, industry, main services):</label>
+                    <textarea id="business-input" rows="5" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200" placeholder="e.g., 'organic coffee shop, sustainable, community focused, artisan pastries'"></textarea>
+                </div>
+                
+                <button id="generate-description-btn" class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors duration-300 shadow-md flex items-center justify-center">
+                    <span id="button-text">Generate Description ✨</span>
+                    <div id="loader" class="loader ml-3 hidden"></div>
+                </button>
+
+                <div id="generated-output-area" class="mt-8 p-6 bg-blue-50 rounded-lg border border-blue-200 hidden">
+                    <h3 class="text-xl font-semibold text-blue-800 mb-4">Your AI-Generated Description:</h3>
+                    <p id="generated-description" class="text-blue-700 leading-relaxed"></p>
+                </div>
+                 <div id="error-message" class="mt-8 p-4 bg-red-100 text-red-700 rounded-lg border border-red-300 hidden">
+                    <p>Error: Could not generate description. Please try again or refine your input.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action Section -->
+    <section class="bg-blue-600 text-white py-16 md:py-20 text-center">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl md:text-4xl font-bold mb-6">Ready to Join Our Business Network?</h2>
+            <p class="text-lg md:text-xl mb-8 opacity-90">Partner with D.M.P. to amplify your business potential and connect with industry leaders.</p>
+            <a href="#" id="signup-call-to-action" class="bg-white text-blue-600 px-10 py-4 rounded-lg font-semibold text-xl hover:bg-gray-100 transition-colors duration-300 shadow-lg">
+                Sign Up Now
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer Section -->
+    <footer class="bg-gray-800 text-gray-300 py-10">
+        <div class="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center text-center md:text-left">
+            <!-- Footer Nav Links -->
+            <nav class="flex flex-wrap justify-center md:justify-start space-x-6 mb-6 md:mb-0">
+                <a href="#" class="hover:text-white transition-colors duration-300">Privacy Policy</a>
+                <a href="#" class="hover:text-white transition-colors duration-300">Terms of Service</a>
+                <a href="#" class="hover:text-white transition-colors duration-300">FAQ</a>
+                <a href="#" class="hover:text-white transition-colors duration-300">Support</a>
+            </nav>
+            <!-- Copyright Information -->
+            <p class="text-sm">&copy; 2023 D.M.P.. All rights reserved.</p>
+        </div>
+    </footer>
+    <!-- Login Modal Overlay -->
+    <div id="login-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close-button" id="close-login-modal">&times;</button>
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Welcome Back!</h2>
+            <p class="text-gray-600 mb-8 text-center">Log in to continue your journey.</p>
+            
+            <form action="#" method="POST">
+                <div class="mb-5">
+                    <label for="login-email" class="block text-gray-700 text-sm font-medium mb-2">Email Address</label>
+                    <input type="email" id="login-email" name="email" placeholder="you@example.com"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+                           required>
+                </div>
+                <div class="mb-6">
+                    <label for="login-password" class="block text-gray-700 text-sm font-medium mb-2">Password</label>
+                    <input type="password" id="login-password" name="password" placeholder="••••••••"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+                           required>
+                </div>
+                
+                <div class="flex justify-between items-center mb-6">
+                    <div class="text-sm">
+                        <a href="#" class="font-medium text-blue-600 hover:text-blue-800 transition-colors duration-200">Forgot Password?</a>
+                    </div>
+                </div>
+                
+                <button type="submit"
+                        class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors duration-300 shadow-md">
+                    Login
+                </button>
+            </form>
+            
+            <div class="mt-8 text-center text-gray-600">
+                Don't have an account? 
+                <a href="#" id="switch-to-signup" class="font-medium text-blue-600 hover:text-blue-800 transition-colors duration-200">Sign Up</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sign Up Modal Overlay -->
+    <div id="signup-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close-button" id="close-signup-modal">&times;</button>
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Join Our Community!</h2>
+            <p class="text-gray-600 mb-8 text-center">Create your account to start exploring unique digital assets.</p>
+            
+            <form action="#" method="POST">
+                <div class="mb-5">
+                    <label for="signup-name" class="block text-gray-700 text-sm font-medium mb-2">Full Name</label>
+                    <input type="text" id="signup-name" name="name" placeholder="John Doe"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+                           required>
+                </div>
+                <div class="mb-5">
+                    <label for="signup-email" class="block text-gray-700 text-sm font-medium mb-2">Email Address</label>
+                    <input type="email" id="signup-email" name="email" placeholder="you@example.com"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+                           required>
+                </div>
+                <div class="mb-5">
+                    <label for="signup-password" class="block text-gray-700 text-sm font-medium mb-2">Password</label>
+                    <input type="password" id="signup-password" name="password" placeholder="••••••••"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+                           required>
+                </div>
+                <div class="mb-6">
+                    <label for="signup-confirm-password" class="block text-gray-700 text-sm font-medium mb-2">Confirm Password</label>
+                    <input type="password" id="signup-confirm-password" name="confirm-password" placeholder="••••••••"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+                           required>
+                </div>
+                
+                <button type="submit"
+                        class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-colors duration-300 shadow-md">
+                    Sign Up
+                </button>
+            </form>
+            
+            <div class="mt-8 text-center text-gray-600">
+                Already have an account? 
+                <a href="#" id="switch-to-login" class="font-medium text-blue-600 hover:text-blue-800 transition-colors duration-200">Login</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const header = document.querySelector('.fixed-header');
+            const heroSection = document.querySelector('.hero');
+            
+            // Header buttons
+            const loginButtonHeader = document.getElementById('login-button-header');
+            const signupButtonHeader = document.getElementById('signup-button-header');
+            const signupCallToAction = document.getElementById('signup-call-to-action'); // From hero section CTA
+
+            // Modals and their close buttons
+            const loginModal = document.getElementById('login-modal');
+            const closeLoginModalButton = document.getElementById('close-login-modal');
+            const signupModal = document.getElementById('signup-modal');
+            const closeSignupModalButton = document.getElementById('close-signup-modal');
+
+            // Switch links inside modals
+            const switchToSignupLink = document.getElementById('switch-to-signup');
+            const switchToLoginLink = document.getElementById('switch-to-login');
+
+            // Gemini API related elements
+            const businessInput = document.getElementById('business-input');
+            const generateDescriptionBtn = document.getElementById('generate-description-btn');
+            const generatedDescription = document.getElementById('generated-description');
+            const generatedOutputArea = document.getElementById('generated-output-area');
+            const errorMessage = document.getElementById('error-message');
+            const loader = document.getElementById('loader');
+            const buttonText = document.getElementById('button-text');
+
+            // --- Hero Image Slider Logic ---
+            const slider = document.getElementById('hero-image-slider');
+            // Get all img elements directly within the slider
+            const slides = slider.querySelectorAll('img');
+            // Select the container for dots and then all span elements within it
+            const dotsContainer = slider.querySelector('.absolute.bottom-4'); 
+            const dots = dotsContainer.querySelectorAll('.slider-dot');
+            const prevArrow = slider.querySelector('.slider-prev');
+            const nextArrow = slider.querySelector('.slider-next');
+
+            let currentSlideIndex = 0;
+            let slideInterval;
+
+            function showSlide(index) {
+                // Wrap around logic for index
+                if (index >= slides.length) {
+                    currentSlideIndex = 0;
+                } else if (index < 0) {
+                    currentSlideIndex = slides.length - 1;
+                } else {
+                    currentSlideIndex = index;
+                }
+
+                // Deactivate all slides and dots
+                slides.forEach(s => s.classList.remove('active'));
+                dots.forEach(d => d.classList.remove('active'));
+
+                // Activate current slide and dot
+                slides[currentSlideIndex].classList.add('active');
+                dots[currentSlideIndex].classList.add('active');
+            }
+
+            function nextSlide() {
+                showSlide(currentSlideIndex + 1);
+            }
+
+            function prevSlide() {
+                showSlide(currentSlideIndex - 1);
+            }
+
+            function startSlider() {
+                // Clear any existing interval to prevent multiple intervals running
+                if (slideInterval) {
+                    clearInterval(slideInterval);
+                }
+                slideInterval = setInterval(nextSlide, 5000); // Change slide every 5 seconds
+            }
+
+            // Event listeners for arrows
+            prevArrow.addEventListener('click', () => {
+                prevSlide();
+                startSlider(); // Restart interval on manual interaction
+            });
+
+            nextArrow.addEventListener('click', () => {
+                nextSlide();
+                startSlider(); // Restart interval on manual interaction
+            });
+
+            // Event listeners for dots
+            dots.forEach((dot, index) => {
+                dot.addEventListener('click', () => {
+                    showSlide(index);
+                    startSlider(); // Restart interval on manual interaction
+                });
+            });
+
+            // Initialize slider and start auto-play
+            showSlide(0); // Show the first slide initially
+            startSlider(); // Start the auto-play
+
+            const parallaxSpeed = 1.2; // Hero section moves 1.2x faster than scroll
+            const fadeStart = 0; // Header fade starts immediately
+            const fadeEnd = 150; // Header fully faded out after 150px scroll
+
+            // --- Scroll Effects ---
+            window.addEventListener('scroll', function() {
+                let scrollPosition = window.scrollY;
+
+                // Parallax for Hero Section (moves faster than scroll)
+                heroSection.style.transform = `translateY(${scrollPosition * -parallaxSpeed}px)`;
+
+                // Header Fade Effect
+                if (scrollPosition <= fadeStart) {
+                    header.style.opacity = 1; // Fully visible at the top
+                } else if (scrollPosition >= fadeEnd) {
+                    header.style.opacity = 0; // Fully transparent after scroll threshold
+                } else {
+                    // Calculate opacity based on scroll position within the fade range
+                    const opacity = 1 - ((scrollPosition - fadeStart) / (fadeEnd - fadeStart));
+                    header.style.opacity = opacity;
+                }
+            });
+
+            // --- Modal Management Functions ---
+
+            // Function to close any active modal
+            function closeAllModals() {
+                loginModal.classList.remove('active');
+                signupModal.classList.remove('active');
+                document.body.style.overflow = ''; // Restore scrolling
+            }
+
+            // Function to open a specific modal with a slide effect
+            function openModal(modalToOpen, slideDirection) {
+                closeAllModals(); // Ensure all others are closed first
+                document.body.style.overflow = 'hidden'; // Prevent scrolling
+
+                const modalContent = modalToOpen.querySelector('.modal-content');
+                
+                // Reset transform before applying slide direction for smooth transition
+                modalContent.style.transform = 'translateX(0)'; 
+                void modalContent.offsetWidth; // Trigger reflow to apply initial transform
+
+                if (slideDirection === 'right') {
+                    modalContent.classList.add('modal-slide-right');
+                    // After a short delay, move it to the center
+                    setTimeout(() => {
+                        modalContent.classList.remove('modal-slide-right');
+                    }, 50); // Small delay
+                } else if (slideDirection === 'left') {
+                    modalContent.classList.add('modal-slide-left');
+                    setTimeout(() => {
+                        modalContent.classList.remove('modal-slide-left');
+                    }, 50); // Small delay
+                }
+
+                modalToOpen.classList.add('active'); // Activate the overlay
+            }
+
+
+            // --- Event Listeners for Modals ---
+
+            // Open Login Modal from Header
+            loginButtonHeader.addEventListener('click', function(event) {
+                event.preventDefault();
+                openModal(loginModal, 'none'); // No slide for initial open
+            });
+
+            // Open Sign Up Modal from Header
+            signupButtonHeader.addEventListener('click', function(event) {
+                event.preventDefault();
+                openModal(signupModal, 'none'); // No slide for initial open
+            });
+
+            // Open Sign Up Modal from Call to Action (Hero Section)
+            signupCallToAction.addEventListener('click', function(event) {
+                event.preventDefault();
+                openModal(signupModal, 'none'); // No slide for initial open
+            });
+
+            // Close Login Modal
+            closeLoginModalButton.addEventListener('click', function() {
+                closeAllModals();
+            });
+
+            // Close Sign Up Modal
+            closeSignupModalButton.addEventListener('click', function() {
+                closeAllModals();
+            });
+
+            // Close modal if clicked outside overlay
+            loginModal.addEventListener('click', function(event) {
+                if (event.target === loginModal) {
+                    closeAllModals();
+                }
+            });
+            signupModal.addEventListener('click', function(event) {
+                if (event.target === signupModal) {
+                    closeAllModals();
+                }
+            });
+
+            // --- Switch between Login and Sign Up Modals ---
+
+            // Switch from Login to Sign Up
+            switchToSignupLink.addEventListener('click', function(event) {
+                event.preventDefault();
+                // Close login with animation to left, then open signup from right
+                const loginContent = loginModal.querySelector('.modal-content');
+                loginContent.style.transform = 'translateX(-100%)'; // Slide login out to left
+                loginContent.style.opacity = '0'; // Fade out
+                loginModal.classList.remove('active'); // Deactivate overlay immediately after starting slide
+                document.body.style.overflow = 'hidden'; // Keep body fixed during transition
+
+                setTimeout(() => {
+                    openModal(signupModal, 'right'); // Open signup sliding from right
+                }, 400); // Allow time for login to slide out (match transition duration)
+            });
+
+            // Switch from Sign Up to Login
+            switchToLoginLink.addEventListener('click', function(event) {
+                event.preventDefault();
+                // Close signup with animation to right, then open login from left
+                const signupContent = signupModal.querySelector('.modal-content');
+                signupContent.style.transform = 'translateX(100%)'; // Slide signup out to right
+                signupContent.style.opacity = '0'; // Fade out
+                signupModal.classList.remove('active'); // Deactivate overlay immediately after starting slide
+                document.body.style.overflow = 'hidden'; // Keep body fixed during transition
+
+                setTimeout(() => {
+                    openModal(loginModal, 'left'); // Open login sliding from left
+                }, 400); // Allow time for signup to slide out
+            });
+
+            // Reset modal content transforms on close to ensure next open is clean
+            loginModal.addEventListener('transitionend', function(event) {
+                if (!loginModal.classList.contains('active') && event.propertyName === 'opacity') {
+                    loginModal.querySelector('.modal-content').style.transform = 'translateX(0)';
+                    loginModal.querySelector('.modal-content').style.opacity = '1';
+                }
+            });
+            signupModal.addEventListener('transitionend', function(event) {
+                if (!signupModal.classList.contains('active') && event.propertyName === 'opacity') {
+                    signupModal.querySelector('.modal-content').style.transform = 'translateX(0)';
+                    signupModal.querySelector('.modal-content').style.opacity = '1';
+                }
+            });
+
+            // --- Gemini API Integration: Business Description Generator ---
+            generateDescriptionBtn.addEventListener('click', async function() {
+                const businessInfo = businessInput.value.trim();
+
+                if (businessInfo === '') {
+                    generatedOutputArea.classList.add('hidden');
+                    errorMessage.classList.remove('hidden');
+                    errorMessage.querySelector('p').textContent = "Please enter some information about your business.";
+                    return;
+                }
+
+                // Show loader, hide output/error
+                buttonText.textContent = ''; // Hide button text
+                loader.classList.remove('hidden'); // Show loader
+                generateDescriptionBtn.disabled = true; // Disable button
+                generatedOutputArea.classList.add('hidden');
+                errorMessage.classList.add('hidden');
+                generatedDescription.textContent = ''; // Clear previous output
+
+                try {
+                    let chatHistory = [];
+                    const prompt = `Generate a compelling and concise business description (max 100 words) based on the following information/keywords. Focus on attracting customers and highlighting unique value.
+                    
+                    Business Info: ${businessInfo}`;
+
+                    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                    const payload = { contents: chatHistory };
+                    const apiKey = ""; // Canvas will automatically provide this if empty
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                    
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const text = result.candidates[0].content.parts[0].text;
+                        generatedDescription.textContent = text;
+                        generatedOutputArea.classList.remove('hidden');
+                    } else {
+                        errorMessage.classList.remove('hidden');
+                        errorMessage.querySelector('p').textContent = "Error: Could not generate description. Unexpected API response structure.";
+                    }
+
+                } catch (error) {
+                    console.error('Error generating business description:', error);
+                    errorMessage.classList.remove('hidden');
+                    errorMessage.querySelector('p').textContent = `Error: Could not generate description. ${error.message}. Please try again.`;
+                } finally {
+                    // Hide loader, enable button, restore button text
+                    loader.classList.add('hidden');
+                    buttonText.textContent = 'Generate Description ✨';
+                    generateDescriptionBtn.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+</html>
